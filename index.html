@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mise — Cook Tonight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --cream: #FAF7F2;
+    --warm: #F0EAE0;
+    --terracotta: #C4622D;
+    --terracotta-light: #E8835A;
+    --forest: #2D4A3E;
+    --forest-light: #3D6357;
+    --gold: #D4A843;
+    --text: #1A1A1A;
+    --muted: #7A7068;
+    --white: #FFFFFF;
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* PHONE FRAME */
+  .frame-wrapper {
+    display: flex;
+    gap: 60px;
+    align-items: flex-start;
+    padding: 40px 60px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .phone-frame {
+    width: 375px;
+    min-width: 375px;
+    background: var(--white);
+    border-radius: 48px;
+    border: 10px solid #1A1A1A;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.25), 0 0 0 2px #333;
+    overflow: hidden;
+    position: relative;
+    height: 780px;
+  }
+  .phone-notch {
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 120px; height: 28px;
+    background: #1A1A1A;
+    border-radius: 0 0 20px 20px;
+    z-index: 999;
+  }
+  .phone-screen {
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* SCREENS */
+  .screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--cream);
+    overflow-y: auto;
+    display: none;
+    padding-top: 40px;
+  }
+  .screen.active { display: block; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100%; height: 68px;
+    background: var(--white);
+    border-top: 1px solid rgba(0,0,0,0.07);
+    display: flex;
+    z-index: 100;
+  }
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+  .nav-btn.active { color: var(--terracotta); }
+  .nav-btn svg { width: 22px; height: 22px; }
+
+  /* HOME SCREEN */
+  .home-header {
+    padding: 50px 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .logo { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--forest); }
+  .logo span { color: var(--terracotta); }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--terracotta); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: white; }
+
+  .hero-section { padding: 24px 24px 0; }
+  .hero-label { font-size: 11px; font-weight: 600; letter-spacing: 2px; color: var(--terracotta); text-transform: uppercase; margin-bottom: 6px; }
+  .hero-title { font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.15; color: var(--forest); }
+  .hero-title em { font-style: italic; color: var(--terracotta-light); }
+
+  .mood-bar { padding: 20px 24px 0; }
+  .mood-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .mood-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mood-pill {
+    padding: 7px 14px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.2s;
+    background: var(--warm);
+    color: var(--text);
+  }
+  .mood-pill.selected { background: var(--forest); color: var(--white); border-color: var(--forest); }
+
+  .cuisine-section { padding: 20px 0 0; }
+  .section-header { padding: 0 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 18px; }
+  .see-all { font-size: 12px; color: var(--terracotta); font-weight: 600; cursor: pointer; }
+
+  .cuisine-scroll { display: flex; gap: 12px; padding: 0 24px; overflow-x: auto; padding-bottom: 8px; }
+  .cuisine-scroll::-webkit-scrollbar { display: none; }
+  .cuisine-card {
+    min-width: 100px;
+    height: 120px;
+    border-radius: 16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  .cuisine-card:active { transform: scale(0.96); }
+  .cuisine-bg { width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-size: 36px; position: relative; }
+  .cuisine-card .cuisine-name { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 11px; font-weight: 600; }
+  .cuisine-card-mediterranean { background: linear-gradient(135deg, #A8D5E2, #5DA0B5); }
+  .cuisine-card-mexican { background: linear-gradient(135deg, #F4A460, #E8572A); }
+  .cuisine-card-italian { background: linear-gradient(135deg, #8FBC8F, #4CAF50); }
+  .cuisine-card-asian { background: linear-gradient(135deg, #DDA0DD, #9B59B6); }
+  .cuisine-card-american { background: linear-gradient(135deg, #F0D060, #E8A020); }
+
+  .featured-recipe {
+    margin: 16px 24px;
+    background: var(--forest);
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .featured-recipe:active { transform: scale(0.98); }
+  .featured-recipe::before { content: ''; position: absolute; right: -20px; top: -20px; width: 150px; height: 150px; background: rgba(255,255,255,0.05); border-radius: 50%; }
+  .featured-badge { font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .featured-name { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--white); line-height: 1.2; }
+  .featured-meta { display: flex; gap: 16px; margin-top: 12px; }
+  .meta-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: rgba(255,255,255,0.7); }
+  .featured-cta {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .cook-btn {
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .order-badge { background: var(--gold); color: var(--forest); font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 100px; }
+
+  .quick-recipes { padding: 0 24px 100px; }
+  .recipe-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+    cursor: pointer;
+  }
+  .recipe-emoji { width: 56px; height: 56px; border-radius: 12px; background: var(--warm); display: flex; align-items: center; justify-content: center; font-size: 26px; flex-shrink: 0; }
+  .recipe-info { flex: 1; }
+  .recipe-name { font-weight: 600; font-size: 14px; }
+  .recipe-tags { display: flex; gap: 6px; margin-top: 4px; }
+  .tag { font-size: 10px; color: var(--muted); }
+  .recipe-time { font-size: 12px; color: var(--muted); }
+
+  /* RECIPE DETAIL */
+  .recipe-hero {
+    height: 240px;
+    background: linear-gradient(135deg, #C4622D, #A0522D);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    position: relative;
+  }
+  .recipe-hero-back {
+    position: absolute;
+    top: 50px; left: 16px;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    color: white;
+  }
+  .recipe-detail-body { padding: 20px 24px 100px; }
+  .recipe-detail-title { font-family: 'DM Serif Display', serif; font-size: 26px; line-height: 1.2; }
+  .recipe-stats { display: flex; gap: 20px; margin: 14px 0; }
+  .stat-box { flex: 1; background: var(--warm); border-radius: 12px; padding: 12px; text-align: center; }
+  .stat-val { font-size: 18px; font-weight: 700; color: var(--forest); }
+  .stat-key { font-size: 10px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+
+  .ingredients-section { margin-top: 20px; }
+  .section-label { font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 12px; }
+  .ingredient-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+  .ingredient-photo {
+    width: 48px; height: 48px; border-radius: 10px;
+    object-fit: cover; flex-shrink: 0;
+    background: var(--warm);
+  }
+  .ingredient-photo-placeholder {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: var(--warm); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .ingredient-info { flex: 1; }
+  .ingredient-name { font-size: 14px; font-weight: 500; }
+  .ingredient-amount { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .order-btn-big {
+    width: 100%;
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+  }
+  .order-btn-big:hover { background: var(--terracotta-light); transform: translateY(-1px); }
+
+  /* INSTRUCTIONS */
+  .instructions-section { margin-top: 24px; }
+  .instruction-step {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    align-items: flex-start;
+  }
+  .instruction-step:last-child { border-bottom: none; }
+  .step-number {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--forest);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .step-content { flex: 1; }
+  .step-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .step-desc { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+  .step-timer {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--warm);
+    border-radius: 100px;
+    padding: 3px 9px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--terracotta);
+    margin-top: 7px;
+  }
+
+  .store-options { margin-top: 16px; }
+  .store-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1.5px solid var(--warm);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .store-card.best { border-color: var(--terracotta); }
+  .store-name { font-weight: 600; font-size: 14px; }
+  .store-meta { font-size: 12px; color: var(--muted); }
+  .store-price { font-weight: 700; color: var(--forest); }
+  .store-eta { font-size: 11px; font-weight: 600; color: var(--terracotta); background: #FDEEE6; padding: 3px 8px; border-radius: 100px; }
+
+  /* ORDER SCREEN */
+  .order-header { padding: 50px 24px 0; }
+  .order-title { font-family: 'DM Serif Display', serif; font-size: 26px; margin-top: 12px; }
+  .order-subtitle { font-size: 14px; color: var(--muted); margin-top: 6px; }
+
+  .order-cart { padding: 20px 24px; }
+  .cart-recipe-header {
+    background: var(--forest);
+    border-radius: 16px 16px 0 0;
+    padding: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .cart-recipe-name { color: white; font-weight: 600; font-size: 14px; }
+  .cart-items { background: var(--white); border-radius: 0 0 16px 16px; }
+  .cart-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--warm); }
+  .cart-item-name { font-size: 14px; }
+  .cart-item-check { width: 20px; height: 20px; border-radius: 50%; background: var(--forest); display: flex; align-items: center; justify-content: center; }
+
+  .store-selector { padding: 0 24px 0; }
+  .store-selector-title { font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 14px; }
+
+  .availability-bar {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    border: 1.5px solid var(--warm);
+  }
+  .avail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .avail-store { font-weight: 700; font-size: 15px; }
+  .avail-badge { padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 700; }
+  .avail-full { background: #D4EDDA; color: #1A5C2A; }
+  .avail-partial { background: #FFF3CD; color: #7D5A00; }
+  .avail-dots { display: flex; gap: 4px; flex-wrap: wrap; }
+  .avail-dot { width: 28px; height: 28px; border-radius: 6px; background: #4CAF50; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .avail-dot.missing { background: #FFCDD2; }
+  .avail-price-row { display: flex; justify-content: space-between; margin-top: 12px; }
+  .avail-price { font-size: 20px; font-weight: 700; color: var(--forest); }
+  .confirm-order-btn {
+    width: 100%;
+    background: var(--terracotta);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    margin: 16px 24px;
+    width: calc(100% - 48px);
+    display: block;
+    transition: all 0.2s;
+  }
+
+  /* SUCCESS */
+  .success-screen { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 40px 30px; }
+  .success-screen.active { display: flex; }
+  .success-checkmark { width: 80px; height: 80px; background: var(--forest); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 36px; }
+  .success-title { font-family: 'DM Serif Display', serif; font-size: 28px; }
+  .success-sub { font-size: 14px; color: var(--muted); margin-top: 8px; line-height: 1.6; }
+  .success-eta { margin: 24px 0; background: var(--warm); border-radius: 16px; padding: 20px; width: 100%; }
+  .success-eta-time { font-size: 42px; font-weight: 700; color: var(--forest); }
+  .success-eta-label { font-size: 13px; color: var(--muted); }
+
+  /* SIDEBAR INFO */
+  .sidebar { flex: 1; padding-top: 60px; }
+  .app-name { font-family: 'DM Serif Display', serif; font-size: 48px; color: var(--forest); }
+  .app-name span { color: var(--terracotta); }
+  .app-tagline { font-size: 18px; color: var(--muted); margin-top: 8px; font-weight: 300; line-height: 1.5; }
+
+  .feature-list { margin-top: 48px; display: flex; flex-direction: column; gap: 28px; }
+  .feature-item { display: flex; gap: 16px; align-items: flex-start; }
+  .feature-icon { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .fi-green { background: rgba(45, 74, 62, 0.12); }
+  .fi-orange { background: rgba(196, 98, 45, 0.12); }
+  .fi-gold { background: rgba(212, 168, 67, 0.12); }
+  .feature-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+  .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .screen-tabs { display: flex; gap: 8px; margin-top: 48px; flex-wrap: wrap; }
+  .screen-tab {
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--warm);
+    background: var(--white);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .screen-tab.active { background: var(--forest); color: white; border-color: var(--forest); }
+  .screen-label { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-top: 32px; margin-bottom: 8px; }
+
+  /* DISCOVER SCREEN */
+  .discover-section { padding: 50px 24px 0; }
+  .search-bar {
+    background: var(--warm);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 16px;
+  }
+  .cuisine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+  .cuisine-big-card {
+    border-radius: 16px;
+    height: 110px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s;
+  }
+  .cuisine-big-card:active { transform: scale(0.96); }
+  .cuisine-big-name { font-weight: 700; font-size: 13px; color: white; text-shadow: 0 1px 4px rgba(0,0,0,0.3); margin-top: 4px; }
+  .cbc-med { background: linear-gradient(135deg, #3B82F6, #1D4ED8); }
+  .cbc-mex { background: linear-gradient(135deg, #F59E0B, #B45309); }
+  .cbc-ita { background: linear-gradient(135deg, #10B981, #047857); }
+  .cbc-asi { background: linear-gradient(135deg, #8B5CF6, #5B21B6); }
+  .cbc-ame { background: linear-gradient(135deg, #EF4444, #B91C1C); }
+  .cbc-mid { background: linear-gradient(135deg, #F97316, #9A3412); }
+
+  .filters { display: flex; gap: 8px; margin-top: 16px; overflow-x: auto; padding-bottom: 4px; }
+  .filters::-webkit-scrollbar { display: none; }
+  .filter-chip {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    background: var(--warm);
+    color: var(--text);
+    border: 1.5px solid transparent;
+    transition: all 0.2s;
+  }
+  .filter-chip.active { background: var(--terracotta); color: white; }
+
+</style>
+</head>
+<body>
+
+<div class="frame-wrapper">
+  <!-- PHONE -->
+  <div class="phone-frame">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+
+      <!-- HOME SCREEN -->
+      <div class="screen active" id="screen-home">
+        <div class="home-header">
+          <div class="logo">mise<span>.</span></div>
+          <div class="avatar">J</div>
+        </div>
+        <div class="hero-section">
+          <div class="hero-label">Good Evening, Jamie</div>
+          <div class="hero-title">What are you <em>craving</em> tonight?</div>
+        </div>
+        <div class="mood-bar">
+          <div class="mood-label">Mood</div>
+          <div class="mood-pills">
+            <div class="mood-pill selected">🔥 Quick &amp; Easy</div>
+            <div class="mood-pill">🌿 Healthy</div>
+            <div class="mood-pill">🍝 Comfort</div>
+            <div class="mood-pill">✨ Impress</div>
+          </div>
+        </div>
+        <div class="cuisine-section">
+          <div class="section-header">
+            <div class="section-title">By Cuisine</div>
+            <div class="see-all" onclick="switchScreen('discover')">See all</div>
+          </div>
+          <div class="cuisine-scroll">
+            <div class="cuisine-card cuisine-card-mediterranean" onclick="switchScreen('discover')">
+              <div class="cuisine-bg">🫒<div class="cuisine-name" style="color:white">Mediterranean</div></div>
+            </div>
+            <div class="cuisine-card cuisine-card-mexican" onclick="switchScreen('discover')">
+              <div class="cuisine-bg">🌮<div class="cuisine-name" style="color:white">Mexican</div></div>
+            </div>
+            <div class="cuisine-card cuisine-card-italian" onclick="switchScreen('discover')">
+              <div class="cuisine-bg">🍝<div class="cuisine-name" style="color:white">Italian</div></div>
+            </div>
+            <div class="cuisine-card cuisine-card-asian" onclick="switchScreen('discover')">
+              <div class="cuisine-bg">🍜<div class="cuisine-name" style="color:white">Asian</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="featured-recipe" onclick="switchScreen('recipe')">
+          <div class="featured-badge">⚡ Ready in 25 min</div>
+          <div class="featured-name">Lemon Herb Salmon with Roasted Asparagus</div>
+          <div class="featured-meta">
+            <div class="meta-item">🍽️ Mediterranean</div>
+            <div class="meta-item">👤 2 servings</div>
+            <div class="meta-item">⭐ 4.9</div>
+          </div>
+          <div class="featured-cta">
+            <button class="cook-btn">View Recipe →</button>
+            <div class="order-badge">🛒 Auto-order</div>
+          </div>
+        </div>
+        <div class="quick-recipes">
+          <div class="section-header" style="padding:0 0 4px">
+            <div class="section-title">Trending Tonight</div>
+          </div>
+          <div class="recipe-list-item" onclick="switchScreen('recipe')">
+            <div class="recipe-emoji">🥗</div>
+            <div class="recipe-info">
+              <div class="recipe-name">Greek Salad with Grilled Chicken</div>
+              <div class="recipe-tags"><span class="tag">20 min</span><span class="tag">·</span><span class="tag">Mediterranean</span><span class="tag">·</span><span class="tag">Healthy</span></div>
+            </div>
+            <div class="recipe-time">$14.20</div>
+          </div>
+          <div class="recipe-list-item" onclick="switchScreen('recipe')">
+            <div class="recipe-emoji">🌮</div>
+            <div class="recipe-info">
+              <div class="recipe-name">Street Tacos al Pastor</div>
+              <div class="recipe-tags"><span class="tag">35 min</span><span class="tag">·</span><span class="tag">Mexican</span></div>
+            </div>
+            <div class="recipe-time">$12.80</div>
+          </div>
+          <div class="recipe-list-item" onclick="switchScreen('recipe')">
+            <div class="recipe-emoji">🍜</div>
+            <div class="recipe-info">
+              <div class="recipe-name">Miso Ramen from Scratch</div>
+              <div class="recipe-tags"><span class="tag">45 min</span><span class="tag">·</span><span class="tag">Japanese</span></div>
+            </div>
+            <div class="recipe-time">$16.50</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DISCOVER SCREEN -->
+      <div class="screen" id="screen-discover">
+        <div class="discover-section">
+          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--terracotta)">Explore</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:26px;margin-top:4px;">Find Your Next<br><em style="color:var(--terracotta-light)">Favorite Dish</em></div>
+          <div class="search-bar">🔍 Search cuisines, ingredients, moods...</div>
+          <div class="filters">
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">Under 30 min</div>
+            <div class="filter-chip">Vegetarian</div>
+            <div class="filter-chip">Under $15</div>
+            <div class="filter-chip">Date Night</div>
+            <div class="filter-chip">Family</div>
+          </div>
+          <div class="cuisine-grid">
+            <div class="cuisine-big-card cbc-med" onclick="switchScreen('recipe')"><div style="font-size:32px">🫒</div><div class="cuisine-big-name">Mediterranean</div></div>
+            <div class="cuisine-big-card cbc-mex" onclick="switchScreen('recipe')"><div style="font-size:32px">🌮</div><div class="cuisine-big-name">Mexican</div></div>
+            <div class="cuisine-big-card cbc-ita" onclick="switchScreen('recipe')"><div style="font-size:32px">🍝</div><div class="cuisine-big-name">Italian</div></div>
+            <div class="cuisine-big-card cbc-asi" onclick="switchScreen('recipe')"><div style="font-size:32px">🍜</div><div class="cuisine-big-name">Asian</div></div>
+            <div class="cuisine-big-card cbc-ame" onclick="switchScreen('recipe')"><div style="font-size:32px">🍔</div><div class="cuisine-big-name">American</div></div>
+            <div class="cuisine-big-card cbc-mid" onclick="switchScreen('recipe')"><div style="font-size:32px">🧆</div><div class="cuisine-big-name">Middle Eastern</div></div>
+          </div>
+        </div>
+        <div style="height:80px"></div>
+      </div>
+
+      <!-- RECIPE DETAIL SCREEN -->
+      <div class="screen" id="screen-recipe">
+        <div class="recipe-hero">
+          <div class="recipe-hero-back" onclick="switchScreen('home')">←</div>
+          🐟
+        </div>
+        <div class="recipe-detail-body">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--terracotta);margin-bottom:4px">Mediterranean · Chef's Pick</div>
+          <div class="recipe-detail-title">Lemon Herb Salmon with Roasted Asparagus</div>
+          <div class="recipe-stats">
+            <div class="stat-box"><div class="stat-val">25m</div><div class="stat-key">Cook</div></div>
+            <div class="stat-box"><div class="stat-val">2</div><div class="stat-key">Servings</div></div>
+            <div class="stat-box"><div class="stat-val">420</div><div class="stat-key">Calories</div></div>
+            <div class="stat-box"><div class="stat-val">⭐4.9</div><div class="stat-key">Rated</div></div>
+          </div>
+          <div class="ingredients-section">
+            <div class="section-label">Ingredients</div>
+
+            <div class="ingredient-row">
+              <img class="ingredient-photo" src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=96&h=96&fit=crop&auto=format" alt="Salmon fillet" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="ingredient-photo-placeholder" style="display:none">🐟</div>
+              <div class="ingredient-info"><div class="ingredient-name">Salmon fillet</div><div class="ingredient-amount">2 × 6 oz</div></div>
+            </div>
+
+            <div class="ingredient-row">
+              <img class="ingredient-photo" src="https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=96&h=96&fit=crop&auto=format" alt="Asparagus" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="ingredient-photo-placeholder" style="display:none">🌿</div>
+              <div class="ingredient-info"><div class="ingredient-name">Asparagus</div><div class="ingredient-amount">1 bunch</div></div>
+            </div>
+
+            <div class="ingredient-row">
+              <img class="ingredient-photo" src="https://images.unsplash.com/photo-1590502593747-42a996133562?w=96&h=96&fit=crop&auto=format" alt="Lemon" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="ingredient-photo-placeholder" style="display:none">🍋</div>
+              <div class="ingredient-info"><div class="ingredient-name">Lemon</div><div class="ingredient-amount">1 large</div></div>
+            </div>
+
+            <div class="ingredient-row">
+              <img class="ingredient-photo" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=96&h=96&fit=crop&auto=format" alt="Fresh dill" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="ingredient-photo-placeholder" style="display:none">🌱</div>
+              <div class="ingredient-info"><div class="ingredient-name">Fresh dill</div><div class="ingredient-amount">1 tbsp</div></div>
+            </div>
+
+            <div class="ingredient-row">
+              <img class="ingredient-photo" src="https://images.unsplash.com/photo-1615485500704-8e990f9900f7?w=96&h=96&fit=crop&auto=format" alt="Garlic" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="ingredient-photo-placeholder" style="display:none">🧄</div>
+              <div class="ingredient-info"><div class="ingredient-name">Garlic cloves</div><div class="ingredient-amount">3 cloves</div></div>
+            </div>
+
+            <div class="ingredient-row">
+              <img class="ingredient-photo" src="https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=96&h=96&fit=crop&auto=format" alt="Olive oil" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="ingredient-photo-placeholder" style="display:none">🫒</div>
+              <div class="ingredient-info"><div class="ingredient-name">Olive oil</div><div class="ingredient-amount">2 tbsp</div></div>
+            </div>
+
+            <div class="ingredient-row">
+              <img class="ingredient-photo" src="https://images.unsplash.com/photo-1563227812-0ea4c22e6cc8?w=96&h=96&fit=crop&auto=format" alt="Capers" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div class="ingredient-photo-placeholder" style="display:none">🟢</div>
+              <div class="ingredient-info"><div class="ingredient-name">Capers</div><div class="ingredient-amount">1 tbsp</div></div>
+            </div>
+
+          </div>
+          <button class="order-btn-big" onclick="switchScreen('order')">
+            🛒 Order All Ingredients — $18.40
+          </button>
+          <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:8px">Estimated delivery in 45–60 min via your local store</div>
+
+          <div class="instructions-section">
+            <div class="section-label" style="margin-top:24px;">Instructions</div>
+
+            <div class="instruction-step">
+              <div class="step-number">1</div>
+              <div class="step-content">
+                <div class="step-title">Preheat & prep</div>
+                <div class="step-desc">Preheat oven to 400°F (200°C). Pat salmon fillets dry with paper towels and season generously with salt and pepper on both sides.</div>
+                <div class="step-timer">⏱ 5 min</div>
+              </div>
+            </div>
+
+            <div class="instruction-step">
+              <div class="step-number">2</div>
+              <div class="step-content">
+                <div class="step-title">Roast the asparagus</div>
+                <div class="step-desc">Toss asparagus with 1 tbsp olive oil, salt, and 2 minced garlic cloves. Spread on a baking sheet and roast for 12–15 min until tender and slightly charred.</div>
+                <div class="step-timer">⏱ 15 min</div>
+              </div>
+            </div>
+
+            <div class="instruction-step">
+              <div class="step-number">3</div>
+              <div class="step-content">
+                <div class="step-title">Make the lemon herb sauce</div>
+                <div class="step-desc">Whisk together the juice of 1 lemon, 1 tbsp olive oil, fresh dill, remaining garlic, and capers. Taste and adjust seasoning.</div>
+                <div class="step-timer">⏱ 3 min</div>
+              </div>
+            </div>
+
+            <div class="instruction-step">
+              <div class="step-number">4</div>
+              <div class="step-content">
+                <div class="step-title">Sear the salmon</div>
+                <div class="step-desc">Heat a skillet over medium-high. Add a splash of olive oil. Sear salmon skin-side up for 4 min, flip, and cook 3–4 min more until golden and cooked through.</div>
+                <div class="step-timer">⏱ 8 min</div>
+              </div>
+            </div>
+
+            <div class="instruction-step">
+              <div class="step-number">5</div>
+              <div class="step-content">
+                <div class="step-title">Plate & serve</div>
+                <div class="step-desc">Arrange asparagus alongside the salmon. Spoon the lemon herb sauce generously over the top. Garnish with a lemon slice and a sprig of fresh dill.</div>
+              </div>
+            </div>
+
+          </div>
+          <div style="height:20px"></div>
+        </div>
+      </div>
+
+      <!-- ORDER SCREEN -->
+      <div class="screen" id="screen-order">
+        <div class="order-header">
+          <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--terracotta)">Smart Order</div>
+          <div class="order-title">Ingredient<br>Delivery</div>
+          <div class="order-subtitle">We found the best store match for your full recipe</div>
+        </div>
+        <div class="order-cart">
+          <div class="cart-recipe-header">
+            <div style="font-size:24px">🐟</div>
+            <div>
+              <div class="cart-recipe-name">Lemon Herb Salmon</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.6)">7 ingredients · 2 servings</div>
+            </div>
+          </div>
+          <div class="cart-items">
+            <div class="cart-item"><span class="cart-item-name">Salmon fillet (2× 6oz)</span><div class="cart-item-check">✓</div></div>
+            <div class="cart-item"><span class="cart-item-name">Asparagus bunch</span><div class="cart-item-check">✓</div></div>
+            <div class="cart-item"><span class="cart-item-name">Lemon, Dill, Garlic</span><div class="cart-item-check">✓</div></div>
+            <div class="cart-item" style="border:none"><span class="cart-item-name">Olive oil, Capers</span><div class="cart-item-check">✓</div></div>
+          </div>
+        </div>
+        <div class="store-selector">
+          <div class="store-selector-title">Best Store Match</div>
+          <div class="availability-bar" style="border-color:var(--terracotta)">
+            <div class="avail-header">
+              <div>
+                <div class="avail-store">🟢 Whole Foods Market</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">0.8 mi · Est. 45 min</div>
+              </div>
+              <div class="avail-badge avail-full">7/7 items</div>
+            </div>
+            <div class="avail-dots">
+              <div class="avail-dot" title="Salmon">🐟</div>
+              <div class="avail-dot" title="Asparagus">🌿</div>
+              <div class="avail-dot" title="Lemon">🍋</div>
+              <div class="avail-dot" title="Dill">🌱</div>
+              <div class="avail-dot" title="Garlic">🧄</div>
+              <div class="avail-dot" title="Olive Oil">🫒</div>
+              <div class="avail-dot" title="Capers">✓</div>
+            </div>
+            <div class="avail-price-row">
+              <div style="font-size:13px;color:var(--muted)">Total estimate</div>
+              <div class="avail-price">$18.40</div>
+            </div>
+          </div>
+          <div class="availability-bar">
+            <div class="avail-header">
+              <div>
+                <div class="avail-store">🟡 Trader Joe's</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:2px">1.2 mi · Est. 55 min</div>
+              </div>
+              <div class="avail-badge avail-partial">5/7 items</div>
+            </div>
+            <div class="avail-dots">
+              <div class="avail-dot">🐟</div>
+              <div class="avail-dot">🌿</div>
+              <div class="avail-dot">🍋</div>
+              <div class="avail-dot">🌱</div>
+              <div class="avail-dot">🧄</div>
+              <div class="avail-dot missing">✗</div>
+              <div class="avail-dot missing">✗</div>
+            </div>
+            <div class="avail-price-row">
+              <div style="font-size:12px;color:var(--muted)">Missing: Capers, Specialty Dill</div>
+              <div class="avail-price" style="font-size:16px">$15.10</div>
+            </div>
+          </div>
+        </div>
+        <button class="confirm-order-btn" onclick="switchScreen('success')">
+          ✓ Confirm Order · $18.40
+        </button>
+        <div style="height:80px"></div>
+      </div>
+
+      <!-- SUCCESS SCREEN -->
+      <div class="screen" id="screen-success">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:40px 30px;text-align:center;">
+          <div style="width:80px;height:80px;background:var(--forest);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:20px">✓</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:28px;">Order Placed!</div>
+          <div style="font-size:14px;color:var(--muted);margin-top:8px;line-height:1.6">Your ingredients are being picked now. Time to prep your kitchen.</div>
+          <div style="margin:24px 0;background:var(--warm);border-radius:16px;padding:20px;width:100%">
+            <div style="font-size:42px;font-weight:700;color:var(--forest)">45 min</div>
+            <div style="font-size:13px;color:var(--muted)">Estimated arrival</div>
+            <div style="margin-top:10px;font-size:13px;color:var(--forest);font-weight:600">📍 Whole Foods Market · $18.40</div>
+          </div>
+          <div style="font-size:14px;color:var(--muted);margin-bottom:16px">While you wait, review your recipe steps</div>
+          <button onclick="switchScreen('home')" style="background:var(--terracotta);color:white;border:none;padding:14px 32px;border-radius:100px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif">Back to Home</button>
+        </div>
+      </div>
+
+      <!-- BOTTOM NAV (visible on all screens except success) -->
+      <div class="bottom-nav" id="bottom-nav">
+        <button class="nav-btn active" id="nav-home" onclick="switchScreen('home')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Home
+        </button>
+        <button class="nav-btn" id="nav-discover" onclick="switchScreen('discover')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Explore
+        </button>
+        <button class="nav-btn" id="nav-order" onclick="switchScreen('order')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          Order
+        </button>
+        <button class="nav-btn" id="nav-saved" onclick="switchScreen('home')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          Saved
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="app-name">mise<span>.</span></div>
+    <div class="app-tagline">The smart recipe app that curates what to cook<br>and orders your ingredients automatically.</div>
+
+    <div class="screen-label">Navigate Screens</div>
+    <div class="screen-tabs">
+      <div class="screen-tab active" onclick="switchScreenTab('home', this)">🏠 Home</div>
+      <div class="screen-tab" onclick="switchScreenTab('discover', this)">🔍 Explore</div>
+      <div class="screen-tab" onclick="switchScreenTab('recipe', this)">🍽️ Recipe Detail</div>
+      <div class="screen-tab" onclick="switchScreenTab('order', this)">🛒 Smart Order</div>
+      <div class="screen-tab" onclick="switchScreenTab('success', this)">✅ Order Confirmed</div>
+    </div>
+
+    <div class="feature-list">
+      <div class="feature-item">
+        <div class="feature-icon fi-orange">🍽️</div>
+        <div>
+          <div class="feature-title">Curated by Cuisine & Mood</div>
+          <div class="feature-desc">Browse by Mediterranean, Mexican, Italian & more. Filter by mood — quick, healthy, comfort, impress. No more staring at Google.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon fi-green">🛒</div>
+        <div>
+          <div class="feature-title">Intelligent Store Matching</div>
+          <div class="feature-desc">We check all nearby stores and find the one that carries every ingredient. No more store-hopping or missing items.</div>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon fi-gold">⚡</div>
+        <div>
+          <div class="feature-title">Same-Day Delivery</div>
+          <div class="feature-desc">Unlike meal kits that take days, ingredients arrive in 45–60 min. Decide at 5pm, cook by 7pm. No subscriptions needed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const navMap = { home: 'nav-home', discover: 'nav-discover', order: 'nav-order', success: 'nav-saved', recipe: 'nav-home' };
+  if (navMap[name]) document.getElementById(navMap[name]).classList.add('active');
+  document.getElementById('bottom-nav').style.display = name === 'success' ? 'none' : 'flex';
+}
+
+function switchScreenTab(name, el) {
+  document.querySelectorAll('.screen-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  switchScreen(name);
+}
+</script>
+</body>
+</html>
